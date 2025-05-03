@@ -19,6 +19,10 @@ export const AuthProvider = ({ children }) => {
 
   const logout = () => signOut(auth);
 
+  if (loading) {
+    return null; // Or a loading spinner component
+  }
+
   return (
     <AuthContext.Provider value={{ user, loading, logout }}>
       {children}
@@ -28,3 +32,6 @@ export const AuthProvider = ({ children }) => {
 
 // Custom Hook to use Auth Context
 export const useAuth = () => useContext(AuthContext);
+
+// Add default export for Expo Router
+export default AuthProvider;
