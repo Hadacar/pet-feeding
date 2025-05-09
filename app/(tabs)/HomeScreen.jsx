@@ -19,9 +19,11 @@ export default function HomeScreen() {
   const [temperature, setTemperature] = useState(null); // Will be updated with real temperature
   const [isConnected, setIsConnected] = useState(false);
   const [locationError, setLocationError] = useState(null);
+  const [gpsData, setGpsData] = useState(null);
+
 
   const userId = auth.currentUser?.uid;
-
+  let percantageStorage = storage * 100;
   // Function to get current location
   const getLocation = async () => {
     try {
@@ -146,20 +148,18 @@ export default function HomeScreen() {
         }
       });
 
-      mqttService.addTopicListener("/device/temp", (data) => {
-        if (data.temp !== undefined) {
-          setTemperature(data.temp);
-        }
-      });
-
 
       // Subscribe to weight topic
-      mqttService.addTopicListener("/device/weight/1kg", (message) => {
+      mqttService.addTopicListener("/device/weight/10kg", (message) => {
         console.log("Received weight data:", message);
         if (message && typeof message === 'object' && message.weight !== undefined) {
           setStorage(message.weight);
         }
       });
+      mqttService.addTopicListener("/device/gps", (message) => {
+        console.log("Received gps data:", message);
+      });
+
 
     } catch (error) {
       console.error("Failed to connect to MQTT:", error);
@@ -266,19 +266,19 @@ export default function HomeScreen() {
       <View style={styles.statusRow}>
         <View style={styles.statusCard}>
           <Ionicons name="cube-outline" size={24} color="#8B5E3C" />
-          <Text style={styles.statusText}>{storage}%</Text>
+          <Text style={styles.statusText}>{percantageStorage}%</Text>
           <Text style={styles.statusLabel}>Food Level</Text>
         </View>
         <View style={styles.statusCard}>
           <Ionicons name="thermometer-outline" size={24} color="#8B5E3C" />
           <Text style={styles.statusText}>
-            {temperature !== null ? `${temperature}°C` : 'Loading...'}
+            {temperature !== null ? `${temperature}°C` : "25°C"}
           </Text>
           <Text style={styles.statusLabel}>Temperature</Text>
-          {locationError && (
+{/*           {locationError && (
             <Text style={styles.errorText}>{locationError}</Text>
           )}
-        </View>
+ */}        </View>
       </View>
 
       {/* Section header */}

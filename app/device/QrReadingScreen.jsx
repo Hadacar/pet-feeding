@@ -38,15 +38,6 @@ export default function QrReadingScreen() {
         }}
       >
         <View style={styles.overlay}>
-          <View style={styles.header}>
-            <TouchableOpacity 
-              style={styles.backButton}
-              onPress={() => router.back()}
-            >
-              <Ionicons name="arrow-back" size={24} color="white" />
-            </TouchableOpacity>
-            <Text style={styles.headerTitle}>Scan QR Code</Text>
-          </View>
           
           <View style={styles.scanArea}>
             <View style={styles.scanFrame}>

@@ -1,13 +1,13 @@
 // /app/petDetails/[id].js
-import React, { useEffect, useState } from "react";
-import { View, Text, Button, TextInput, Image, StyleSheet, Modal, Switch, ScrollView, TouchableOpacity, Platform, Alert, ActivityIndicator } from "react-native";
-import { useLocalSearchParams, Stack } from "expo-router";
-import * as ImagePicker from 'expo-image-picker';
-import { getFirestore, doc, getDoc, updateDoc, collection, addDoc, onSnapshot, deleteDoc } from "firebase/firestore";
-import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import { auth, db } from "../firebaseConfig"; // Adjust path as needed
-import DateTimePicker from '@react-native-community/datetimepicker';
 import { Ionicons } from '@expo/vector-icons';
+import DateTimePicker from '@react-native-community/datetimepicker';
+import * as ImagePicker from 'expo-image-picker';
+import { Stack, useLocalSearchParams } from "expo-router";
+import { addDoc, collection, deleteDoc, doc, getDoc, onSnapshot, updateDoc } from "firebase/firestore";
+import { getStorage } from "firebase/storage";
+import React, { useEffect, useState } from "react";
+import { ActivityIndicator, Alert, Image, Modal, Platform, ScrollView, StyleSheet, Switch, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { auth, db } from "../firebaseConfig"; // Adjust path as needed
 import mqttService from '../services/mqttService';
 
 export default function PetDetailsScreen() {
@@ -408,24 +408,59 @@ export default function PetDetailsScreen() {
                 placeholderTextColor="#A89481"
               />
 
-              <TouchableOpacity
-                style={styles.timePickerButton}
-                onPress={() => setShowTimePicker(true)}
-              >
-                <Ionicons name="time-outline" size={24} color="#8B5E3C" />
-                <Text style={styles.timePickerButtonText}>
-                  {newMeal.alarm.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })}
-                </Text>
-              </TouchableOpacity>
-
-              {showTimePicker && (
-                <DateTimePicker
-                  value={newMeal.alarm}
-                  mode="time"
-                  is24Hour={true}
-                  display="default"
-                  onChange={onTimeChange}
+              {Platform.OS === 'web' ? (
+                <input
+                  type="time"
+                  style={{
+                    borderWidth: 1,
+                    borderColor: 'rgba(109, 76, 65, 0.2)',
+                    backgroundColor: '#FAF3E0',
+                    borderRadius: 10,
+                    padding: 14,
+                    marginBottom: 20,
+                    width: '100%',
+                    fontSize: 16,
+                    color: '#5A3E1B',
+                  }}
+                  value={newMeal.alarm.toLocaleTimeString([], { 
+                    hour: '2-digit', 
+                    minute: '2-digit', 
+                    hour12: false 
+                  })}
+                  onChange={(e) => {
+                    const [hours, minutes] = e.target.value.split(':');
+                    const newDate = new Date(newMeal.alarm);
+                    newDate.setHours(parseInt(hours, 10));
+                    newDate.setMinutes(parseInt(minutes, 10));
+                    setNewMeal({ ...newMeal, alarm: newDate });
+                  }}
                 />
+              ) : (
+                <>
+                  <TouchableOpacity
+                    style={styles.timePickerButton}
+                    onPress={() => setShowTimePicker(true)}
+                  >
+                    <Ionicons name="time-outline" size={24} color="#8B5E3C" />
+                    <Text style={styles.timePickerButtonText}>
+                      {newMeal.alarm.toLocaleTimeString([], { 
+                        hour: '2-digit', 
+                        minute: '2-digit', 
+                        hour12: false 
+                      })}
+                    </Text>
+                  </TouchableOpacity>
+
+                  {showTimePicker && (
+                    <DateTimePicker
+                      value={newMeal.alarm}
+                      mode="time"
+                      is24Hour={true}
+                      display="default"
+                      onChange={onTimeChange}
+                    />
+                  )}
+                </>
               )}
 
               <View style={styles.modalButtons}>

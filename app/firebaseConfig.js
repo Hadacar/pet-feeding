@@ -1,4 +1,4 @@
-import { initializeApp, getApps } from "firebase/app";
+import { initializeApp } from "firebase/app";
 import { initializeAuth, getReactNativePersistence, getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
@@ -15,10 +15,10 @@ const firebaseConfig = {
   measurementId: "G-S4K6L5KZ3P"
 };
 
-// Only initialize if not already initialized
-const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
 
-// Initialize auth based on platform
+// Initialize Auth with AsyncStorage persistence for React Native
 const auth = Platform.OS === 'web' 
   ? getAuth(app)
   : initializeAuth(app, {
@@ -30,6 +30,7 @@ const storage = getStorage(app);
 
 export { auth, db, storage };
 
+// Simple component for Expo Router
 export default function FirebaseConfig() {
   return null;
 }

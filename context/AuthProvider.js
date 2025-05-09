@@ -1,26 +1,37 @@
 import { createContext, useContext, useState, useEffect } from "react";
-import { auth } from "../app/firebaseConfig"; // Make sure this is correctly configured
+import { auth } from "../app/firebaseConfig";
 import { onAuthStateChanged, signOut } from "firebase/auth";
+import { View } from 'react-native';
 
 const AuthContext = createContext();
 
-export const AuthProvider = ({ children }) => {
+export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setUser(user);
+    let unsubscribe;
+    try {
+      unsubscribe = onAuthStateChanged(auth, (user) => {
+        setUser(user);
+        setLoading(false);
+      });
+    } catch (error) {
+      console.error('Auth state change error:', error);
       setLoading(false);
-    });
+    }
 
-    return () => unsubscribe(); // Cleanup
+    return () => {
+      if (unsubscribe) {
+        unsubscribe();
+      }
+    };
   }, []);
 
   const logout = () => signOut(auth);
 
   if (loading) {
-    return null; // Or a loading spinner component
+    return <View />;
   }
 
   return (
@@ -28,10 +39,8 @@ export const AuthProvider = ({ children }) => {
       {children}
     </AuthContext.Provider>
   );
-};
+}
 
-// Custom Hook to use Auth Context
 export const useAuth = () => useContext(AuthContext);
 
-// Add default export for Expo Router
 export default AuthProvider;

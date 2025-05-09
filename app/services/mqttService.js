@@ -1,21 +1,28 @@
 import mqtt from 'mqtt';
+import { Platform } from 'react-native';
 
 const MQTT_CONFIG = {
-  url: "ws://192.168.1.49:9001",
+  url: Platform.OS === 'web' 
+    ? 'ws://broker.pawtelligent.online:9001/mqtt'  // Added /mqtt path for WebSocket
+    : 'mqtt://broker.pawtelligent.online',    // MQTT for mobile
   options: {
     username: "pawtelligent",
     password: "x7esY9m@Ex6&",
     keepalive: 60,
     clientId: `pawtelligent_${Math.random().toString(16).substr(2, 8)}`,
     clean: true,
-    reconnectPeriod: 5000, // Reconnect every 5 seconds if connection is lost
-    connectTimeout: 30 * 1000, // Give up connecting after 30 seconds
+    reconnectPeriod: 5000,
+    connectTimeout: 30 * 1000,
+    ...(Platform.OS === 'web' && {
+      protocol: 'ws',
+      path: '/mqtt',
+      rejectUnauthorized: false // Add this for development
+    })
   },
   topics: {
     schedule: "/device/schedule",
-    weight: "/device/weight/1kg"  // Add this line
-
-
+    weight: "/device/weight/10kg",
+    gps : "device/gps"
   }
 };
 
@@ -29,38 +36,46 @@ class MQTTService {
   connect() {
     return new Promise((resolve, reject) => {
       try {
+        console.log('Attempting to connect to MQTT broker:', MQTT_CONFIG.url);
         this.client = mqtt.connect(MQTT_CONFIG.url, MQTT_CONFIG.options);
 
         this.client.on('connect', () => {
-          console.log('MQTT Connected');
+          console.log('MQTT Connected successfully');
           this.isConnected = true;
           this.subscribeToTopics();
           resolve(true);
         });
 
         this.client.on('error', (err) => {
-          console.error('MQTT Error:', err);
+          console.error('MQTT Connection Error:', err);
+          this.isConnected = false;
           reject(err);
+        });
+
+        this.client.on('close', () => {
+          console.log('MQTT Connection closed');
+          this.isConnected = false;
+        });
+
+        this.client.on('offline', () => {
+          console.log('MQTT Client went offline');
+          this.isConnected = false;
         });
 
         this.client.on('message', (topic, message) => {
           try {
             const data = JSON.parse(message.toString());
-            // Notify all listeners for this topic
+            console.log('Received MQTT message:', topic, data);
             if (this.listeners.has(topic)) {
               this.listeners.get(topic).forEach(callback => callback(data));
             }
           } catch (err) {
-            console.error('Invalid MQTT message:', err);
+            console.error('Error processing MQTT message:', err);
           }
         });
 
-        this.client.on('close', () => {
-          this.isConnected = false;
-          console.log('MQTT Connection closed');
-        });
-
       } catch (err) {
+        console.error('MQTT Connection setup error:', err);
         reject(err);
       }
     });
